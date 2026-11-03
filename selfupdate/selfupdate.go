@@ -116,13 +116,16 @@ func cleanStaged(p Paths) {
 // ok=false 表示至少一边不是可比较的版本号（例如本地开发构建的 "dev" 或
 // git describe 产出的 "0.3.7-2-gabc1234-dirty"），此时调用方应禁用一键更新，
 // 否则会把开发中的构建"升级"成正式版、覆盖掉未提交的改动。
+//
+// 글로벌판 릴리스 태그 "X.Y.Z-global.N" 도 비교한다. 앞의 세 자리를 먼저 보고, 같으면
+// N 으로 가린다(접미사가 없는 X.Y.Z 는 N=0 으로 본다).
 func CompareVersions(a, b string) (int, bool) {
 	av, aok := parseVersion(a)
 	bv, bok := parseVersion(b)
 	if !aok || !bok {
 		return 0, false
 	}
-	for i := range 3 {
+	for i := range av {
 		if av[i] != bv[i] {
 			if av[i] < bv[i] {
 				return -1, true
@@ -133,30 +136,63 @@ func CompareVersions(a, b string) (int, bool) {
 	return 0, true
 }
 
-// parseVersion 解析 "v0.3.7" / "0.3.7" 形式的版本号为 [3]int。
+// globalSuffix 는 글로벌판 릴리스 태그의 접미사다(예: v0.3.15-global.1).
+const globalSuffix = "-global."
+
+// parseVersion 解析 "v0.3.7" / "0.3.7" 形式的版本号为 [4]int（第四位见下方说明）。
 //
 // 只接受纯净的三段式：build.sh 在非 tag 构建时用 git describe 产出
 // "0.3.7-2-gabc1234" 这类带后缀的版本，它们必须被判为不可比较，而不是被当成
 // 0.3.7 —— 否则开发构建会被误判为"已是最新"或被正式版覆盖。
-func parseVersion(s string) ([3]int, bool) {
+//
+// 글로벌판은 여기에 릴리스 접미사 "-global.N"(N 은 1 이상의 정수) 하나만 더 받아 네 번째
+// 자리로 돌려준다. 이 태그에서 나온 개발 빌드("0.3.15-global.1-2-gabc1234",
+// "-dirty")는 접미사 뒤에 숫자 말고 다른 것이 붙으므로 그대로 비교 불가로 남는다.
+func parseVersion(s string) ([4]int, bool) {
 	s = strings.TrimSpace(s)
 	s = strings.TrimPrefix(s, "v")
 	if s == "" {
-		return [3]int{}, false
+		return [4]int{}, false
+	}
+	var out [4]int
+	if core, n, found := strings.Cut(s, globalSuffix); found {
+		g, ok := parseNonNegative(n)
+		if !ok || g == 0 {
+			return [4]int{}, false
+		}
+		out[3] = g
+		s = core
 	}
 	parts := strings.Split(s, ".")
 	if len(parts) != 3 {
-		return [3]int{}, false
+		return [4]int{}, false
 	}
-	var out [3]int
 	for i, p := range parts {
-		n, err := strconv.Atoi(p)
-		if err != nil || n < 0 {
-			return [3]int{}, false
+		n, ok := parseNonNegative(p)
+		if !ok {
+			return [4]int{}, false
 		}
 		out[i] = n
 	}
 	return out, true
+}
+
+// parseNonNegative 는 숫자로만 이루어진 0 이상의 정수를 읽는다. strconv.Atoi 는 "+1" 같은
+// 부호를 받아 주므로, 버전 자리에는 숫자 외 문자가 하나도 없는지 따로 확인한다.
+func parseNonNegative(s string) (int, bool) {
+	if s == "" {
+		return 0, false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return 0, false
+		}
+	}
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+	return n, true
 }
 
 // InDocker 报告进程是否跑在容器里。Docker 下换装写的是容器可写层，

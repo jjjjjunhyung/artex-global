@@ -90,6 +90,22 @@ func TestCompareVersions(t *testing.T) {
 		{"0.3.7-dirty", "0.3.8", 0, false},
 		{"0.3", "0.3.8", 0, false},
 		{"", "0.3.8", 0, false},
+		// 글로벌판 릴리스 태그(-global.N)는 비교 가능해야 원클릭 업데이트가 동작한다.
+		{"0.3.15-global.1", "v0.3.15-global.2", -1, true},
+		{"0.3.15-global.2", "0.3.15-global.1", 1, true},
+		{"0.3.15-global.1", "v0.3.15-global.1", 0, true},
+		{"0.3.15-global.9", "0.3.15-global.10", -1, true}, // 숫자로 비교
+		{"0.3.15-global.3", "0.3.16-global.1", -1, true},  // 앞 세 자리가 먼저
+		{"0.3.15", "0.3.15-global.1", -1, true},           // 접미사 없음 = global.0
+		{"0.4.0", "0.3.15-global.7", 1, true},
+		// 글로벌판 태그에서 나온 개발 빌드와 잘못된 접미사는 계속 비교 불가여야 한다.
+		{"0.3.15-global.1-2-gabc1234", "0.3.15-global.2", 0, false},
+		{"0.3.15-global.1-dirty", "0.3.15-global.2", 0, false},
+		{"0.3.15-global.0", "0.3.15-global.2", 0, false},
+		{"0.3.15-global.", "0.3.15-global.2", 0, false},
+		{"0.3.15-global.+1", "0.3.15-global.2", 0, false},
+		{"0.3.15-global.1.1", "0.3.15-global.2", 0, false},
+		{"0.3.15-beta.1", "0.3.15-global.2", 0, false},
 	}
 	for _, c := range cases {
 		got, ok := CompareVersions(c.a, c.b)
@@ -412,6 +428,22 @@ func TestAssetNameMatchesBuildScript(t *testing.T) {
 	}
 	if got := AssetName("0.3.8", "windows", "amd64"); got != "artex-0.3.8-windows-amd64.zip" {
 		t.Errorf("AssetName = %q", got)
+	}
+	// 글로벌판 태그: release.yml 이 ARTEX_BUILD_VERSION=v0.3.15-global.2 로 build.sh 를 돌리면
+	// v 만 떼어 artex-0.3.15-global.2-<os>-<arch>.zip 을 만든다.
+	if got := AssetName("v0.3.15-global.2", "darwin", "arm64"); got != "artex-0.3.15-global.2-darwin-arm64.zip" {
+		t.Errorf("AssetName = %q", got)
+	}
+}
+
+// Repo 가 상류를 가리키면 상류가 릴리스를 다시 올리는 순간 원클릭 업데이트가 글로벌판
+// 바이너리를 상류 바이너리로 덮어쓴다. 실수로 되돌리지 않도록 고정한다.
+func TestRepoIsNotUpstream(t *testing.T) {
+	if strings.EqualFold(Repo, "Autumn-27/artex") {
+		t.Fatalf("Repo = %q: 업데이트 원본이 상류를 가리킨다", Repo)
+	}
+	if !strings.HasSuffix(latestURL, "/repos/"+Repo+"/releases/latest") {
+		t.Fatalf("latestURL = %q 이 Repo(%q) 와 맞지 않는다", latestURL, Repo)
 	}
 }
 

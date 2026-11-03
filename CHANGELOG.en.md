@@ -13,6 +13,14 @@ The upstream ARTEX project's per-version release history (0.3.x and earlier) and
 - **Added Spanish documentation.** Translated `README.es.md` from the English README into natural Spanish and added a Spanish link to the language navigation of all five READMEs (English, Korean, Chinese, Spanish, Japanese). Code, commands, payloads, URLs and identifiers are preserved; only descriptive text is translated.
 - **Added Japanese (ja) across the whole localization stack.** Japanese joins the app's supported languages and can be selected in Settings. UI messages (`web/messages/ja.json`), the date locale (`ja-JP`), the agent output language, and the settings and server message catalogs (`config/msg_i18n.go`, `server/errmsg_catalog.go`) are translated into Japanese, while the agents' internal reasoning prompts stay in their original language as for every other locale. For docs, `README.ja.md` was added and the language navigation and supported-language notes across all five READMEs were updated to include Japanese.
 
+### Distribution and dependency independence
+
+- **Moved the repository to `jjjjjunhyung/artex-global` and detached it from the previous fork network.** Repository links in the docs, issue templates, and detection rules now use the new address (past entries in this changelog are left as they were).
+- **Docker images now come from this repository's GHCR.** The default image in `docker-compose.yml` is now `ghcr.io/jjjjjunhyung/artex-global`, and `ARTEX_IMAGE` in `.env` can point at another image. The release workflow publishes to the namespace of the repository it runs in (`ghcr.io/${{ github.repository }}`).
+- **The one-click update now downloads this repository's releases.** The update source (`selfupdate.Repo`) pointed at upstream `Autumn-27/artex`, so an upstream re-release could have replaced this edition's binary with upstream's. Global-edition tags (`vX.Y.Z-global.N`) are now comparable too, so updates work between this edition's releases.
+- **Vendored the upstream author's personal Go module `norma` into the repository.** The `v0.4.3` tag source sits unmodified in `third_party/norma` and is wired in with a `replace` in `go.mod`, so the build no longer depends on that repository existing (provenance and verification are in `third_party/README.md`).
+- Removed `docker-compose.bench.yml`, which referenced `Dockerfile.bench` and `bench/.env` that are not in the repository.
+
 ### Fixed
 
 - Distinguish task report loading failures from empty reports and offer a retry button. Late responses from a previous task cannot replace the current task report.

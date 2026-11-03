@@ -60,3 +60,7 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
+
+// norma 는 상류 원저작자의 개인 모듈이다. 그 저장소가 사라지거나 바뀌어도 빌드가 되도록
+// v0.4.3 태그 소스를 그대로 저장소 안에 두고 연결한다(출처·검증 방법은 third_party/README.md).
+replace github.com/Autumn-27/norma => ./third_party/norma

@@ -12,7 +12,12 @@ import (
 
 // Repo 是发布源。写死而不是做成配置项：更新源可配等于给任何能改配置的人一条
 // 远程代码执行通道，对一个渗透测试平台来说这个口子开不得。
-const Repo = "Autumn-27/artex"
+//
+// 이 글로벌판은 자기 저장소의 GitHub Release 만 받는다. 상류(Autumn-27/artex)를 가리키면
+// 상류가 릴리스를 다시 올리는 순간 원클릭 업데이트가 이 판의 바이너리를 상류 바이너리로
+// 덮어쓰므로, 저장소를 옮기면 이 값도 함께 바꾼다. Release 자산 이름(AssetName)과
+// SHA256SUMS 는 .github/workflows/release.yml 이 만드는 형식과 같다.
+const Repo = "jjjjjunhyung/artex-global"
 
 // latestURL 是 GitHub 的"最新正式版"接口。它会自动跳过 prerelease 和 draft。
 const latestURL = "https://api.github.com/repos/" + Repo + "/releases/latest"
