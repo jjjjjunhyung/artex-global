@@ -8,6 +8,10 @@ The upstream ARTEX project's per-version release history (0.3.x and earlier) and
 
 ## [Unreleased]
 
+## [0.3.15-global.2] · 2026-11-03
+
+Built on upstream ARTEX 0.3.15, this release adds Spanish and Japanese support and moves the distribution paths and build dependencies under this repository's ownership (`jjjjjunhyung/artex-global`). It is the first release and the first Docker image published from this repository.
+
 ### Localization (i18n)
 
 - **Added Spanish documentation.** Translated `README.es.md` from the English README into natural Spanish and added a Spanish link to the language navigation of all five READMEs (English, Korean, Chinese, Spanish, Japanese). Code, commands, payloads, URLs and identifiers are preserved; only descriptive text is translated.

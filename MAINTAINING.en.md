@@ -45,8 +45,9 @@ an upstream change touches these assets, **apply it as is, without translating**
 - **Strings that serve both as display and as agent input.** Some text that appears on the activity
   timeline while also being fed back as planner/reporter input context (task-abort reasons,
   interception-block messages, traffic-evidence helpers, and so on) is kept in the original, because
-  a single record serves two purposes. The rationale is recorded case by case under the "brain
-  boundary records" in `work/DECISIONS-FOR-JIWOO.md`.
+  a single record serves two purposes. The case-by-case rationale for past decisions lives only in
+  the previous maintainer's private working notes and is not in this repository. Record the
+  rationale for new cases in the PR description and commit message.
 - **The original Chinese documents and strings.** Documents keep the original in `README.zh.md` and
   UI strings keep it in `web/messages/zh.json`, so that diffing against upstream changes stays easy.
   Korean translations are filled in only in `web/messages/ko.json`.
@@ -358,7 +359,7 @@ ones we cannot fix, so they go on the allowlist with a reason and are excluded f
 
 Pushing a version tag (`v*`) makes [`.github/workflows/release.yml`](.github/workflows/release.yml)
 build binaries for five platforms and, when a condition is met, a multi-architecture Docker image.
-This fork has never cut a release tag, so this workflow has never run. This section therefore records
+This section records
 what the pipeline assumes and produces, and whether those assumptions match the current repository
 structure. Because pushing a tag creates a GitHub Release on the public repository, cut a release only
 after the publishing decision is made.
@@ -409,10 +410,11 @@ current repository structure by reproducing the binaries job locally.
 
 ### 9.4 The Docker image namespace
 
-Images are published to `ghcr.io/jjjjjunhyung/artex-global`, a namespace this fork owns, and
-`docker-compose.yml` pulls that image (decided 2026-10-11, `work/DECISIONS-FOR-JIWOO.md`, item 8).
-Upstream's `autumn27/artex` has been taken down from Docker Hub and this fork has no push access to
-it, so it is no longer used. A GHCR package may be created as private on its first publish, so after
+Images are published to `ghcr.io/jjjjjunhyung/artex-global`, a namespace this repository owns, and
+`docker-compose.yml` pulls that image. release.yml builds the namespace from the name of the
+repository it runs in (`ghcr.io/${{ github.repository }}`), so moving the repository needs no
+workflow change; only the default in `docker-compose.yml` has to follow. Upstream's `autumn27/artex`
+has been taken down from Docker Hub and there is no push access to it, so it is no longer used. A GHCR package may be created as private on its first publish, so after
 the first release check in the package settings that it is public; if it is private,
 `docker compose pull` fails with an authentication error.
 
